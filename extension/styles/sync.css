@@ -1,0 +1,8 @@
+.code-display {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.7);
+}

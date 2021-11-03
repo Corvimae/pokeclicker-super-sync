@@ -126,6 +126,13 @@ const DEBUG = true;
                   });
                 }
               });  
+
+              injectMethodBefore(App.game.badgeCase, 'gainBadge', badge => {
+                console.log(badge);
+                if (!App.game.badgeCase.hasBadge(badge)) {
+                  sendMessage('badge', { badge });
+                }
+              });  
             };
 
             ws.onclose = () => {
@@ -170,16 +177,36 @@ const DEBUG = true;
                   break;
                 }
 
+                case 'badge':
+                  if (!App.game.badgeCase.hasBadge(data.payload.badge)) {
+                    App.game.badgeCase.gainBadge(data.payload.badge);
+
+                    window.Notifier.notify({
+                      message: `${data.payload.username} obtained the ${BadgeEnums[data.payload.badge]} Badge!`,
+                      type: NotificationConstants.NotificationOption.success
+                    });
+  
+                  }
+                  break;
+
                 case 'initialSync':
                   data.payload.pokemon.forEach(({ id, shiny }) => {
                     if (!App.game.party.alreadyCaughtPokemon(id, shiny)) {
                       App.game.party.gainPokemonById(id, shiny, true);
                     }
                   });
+
+                  data.payload.badges.forEach(badge => {
+                    if (!App.game.badgeCase.hasBadge(badge)) {
+                      App.game.badgeCase.gainBadge(badge)
+                    }
+                  });
                   
                   window.Notifier.notify({
-                    message: `Synced ${data.payload.pokemon.length} caught Pokemon from the session.`,
-                    type: NotificationConstants.NotificationOption .success
+                    message: `- ${data.payload.pokemon.length} caught Pokemon\n - ${data.payload.badges.length} badges`,
+                    title: 'Synced:',
+                    type: NotificationConstants.NotificationOption.success,
+                    timeout: 15000
                   });
 
                   break;  
@@ -190,6 +217,13 @@ const DEBUG = true;
       })})()`;
 
       document.body.append(scriptElement);
+      
+      const codeDisplayElement = document.createElement('div');
+
+      codeDisplayElement.innerHTML = `Sync code: ${syncCode.current}`;
+      codeDisplayElement.classList.add('code-display');
+
+      document.body.appendChild(codeDisplayElement);
     };
 
     wrapper.appendChild(joinSessionButton);

@@ -10,7 +10,8 @@
   "content_scripts": [
     {
       "matches": ["*://*.pokeclicker.com/*"],
-      "js": ["scripts/sync.js"]
+      "js": ["scripts/sync.js"],
+      "css": ["styles/sync.css"]
     }
   ],
   "permissions": [

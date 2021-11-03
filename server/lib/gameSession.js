@@ -4,6 +4,7 @@ class GameSession {
     this.id = [...new Array(6)].map(() => LOBBY_CODE_CHARACTER_SET[Math.floor(Math.random() * LOBBY_CODE_CHARACTER_SET.length)]).join('');
     this.clients = [];
     this.pokemon = [];
+    this.badges = [];
     this.lastUpdate = new Date();
   }
 
@@ -48,6 +49,19 @@ class GameSession {
       shiny,
     }, ws);
     
+    this.refreshLastUpdate();
+  }
+  
+  addBadge(ws, badge) {
+    if (this.badges.indexOf(badge) === -1) {
+      this.badges.push(badge);
+
+      this.broadcast('badge', { 
+        username: this.getUsername(ws),
+        badge
+      }, ws);
+    }
+
     this.refreshLastUpdate();
   }
   

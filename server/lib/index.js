@@ -90,6 +90,12 @@ app.ws('/', ws => {
 
           break;
 
+        case 'badge':
+          usingRoom(ws, room => {
+            room.addBadge(ws, data.payload.badge);
+          });
+
+          break;
         default:
           console.log(`Unexpected event type on socket: ${data.event}.`);
       }
