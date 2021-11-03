@@ -72,6 +72,14 @@ const DEBUG = false;
       const scriptElement = document.createElement('script');
 
       scriptElement.textContent = `const SUPER_SYNC_DEBUG = ${DEBUG ? 'true' : 'false'}; const SYNC_CODE = '${syncCode.current}'; const PLAYER_NAME = '${playerName.current || 'A player'}'; (${(() => {
+        if (SUPER_SYNC_DEBUG) {
+          window.grantDebugResources = () => {
+            [...new Array(25)].map((k, i) => App.game.party.gainPokemonById(i + 151));
+            App.game.wallet.gainMoney(100000);
+            App.game.wallet.gainDungeonTokens(100000);
+          };
+        }
+        
         const waitInterval = { current: null };
 
         waitInterval.current = setInterval(() => {
