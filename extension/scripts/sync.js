@@ -1,6 +1,6 @@
 console.log('Pokeclicker Super Sync enabled.');
 
-const DEBUG = false;
+const DEBUG = true;
 
 (() => {
   const syncCode = { current: '' };
@@ -72,110 +72,121 @@ const DEBUG = false;
       const scriptElement = document.createElement('script');
 
       scriptElement.textContent = `const SUPER_SYNC_DEBUG = ${DEBUG ? 'true' : 'false'}; const SYNC_CODE = '${syncCode.current}'; const PLAYER_NAME = '${playerName.current || 'A player'}'; (${(() => {
-        const ws = new WebSocket(SUPER_SYNC_DEBUG ? `ws://localhost:3000/` : 'wss://pokeclicker-super-sync.maybreak.com/');
-        const isConnected = { current: false };
-        
-        console.log('Session joined!');
+        const waitInterval = { current: null };
 
-        function sendMessage(event, payload = {}) {
-          if (isConnected) ws.send(JSON.stringify({ event, payload: { code: SYNC_CODE, ...payload } }));
-        }
+        waitInterval.current = setInterval(() => {
+          if (App.game) {
+            console.log('Super sync hooks injected.');
+            clearInterval(waitInterval.current);
 
-        ws.onopen = () => {
-          isConnected.current = true;
-
-          window.Notifier.notify({
-            message: `Connected to Pokeclicker Super Sync server, attempting to join session...`,
-          });
-          
-          sendMessage('join', { username: PLAYER_NAME });
-
-          console.log('Connected to sync server.');
-
-          // Wait for game to finish setting up then hook into gameplay methods.
-          function injectMethodBefore(object, method, callback) {
-            const original = object[method].bind(object);
+            const ws = new WebSocket(SUPER_SYNC_DEBUG ? `ws://localhost:3000/` : 'wss://pokeclicker-super-sync.maybreak.com/');
+            const isConnected = { current: false };
             
-            object[method] = (...arguments) => {
-              callback(...arguments);
-              original(...arguments);
-            };
-          }
+            console.log('Session joined!');
 
-          function injectMethodAfter(object, method, callback) {
-            const original = object[method].bind(object);
-            
-            object[method] = (...arguments) => {
-              original(...arguments);
-              callback(...arguments);
-            };
-          }
+            function sendMessage(event, payload = {}) {
+              if (isConnected) ws.send(JSON.stringify({ event, payload: { code: SYNC_CODE, ...payload } }));
+            }
 
-          const waitInterval = { current: null };
+            ws.onopen = () => {
+              isConnected.current = true;
 
-          waitInterval.current = setInterval(() => {
-            if (App.game) {
-              console.log('Super sync hooks injected.');
-              clearInterval(waitInterval.current);
+              window.Notifier.notify({
+                message: `Connected to Pokeclicker Super Sync server, attempting to join session...`,
+              });
+              
+              sendMessage('join', { username: PLAYER_NAME });
+
+              console.log('Connected to sync server.');
+
+              // Wait for game to finish setting up then hook into gameplay methods.
+              function injectMethodBefore(object, method, callback) {
+                const original = object[method].bind(object);
+                
+                object[method] = (...arguments) => {
+                  callback(...arguments);
+                  original(...arguments);
+                };
+              }
+
+              function injectMethodAfter(object, method, callback) {
+                const original = object[method].bind(object);
+                
+                object[method] = (...arguments) => {
+                  original(...arguments);
+                  callback(...arguments);
+                };
+              }
 
               injectMethodBefore(App.game.party, 'gainPokemonById', (id, shiny) => {
-                console.log('caught', App.game.party.alreadyCaughtPokemon(id, shiny));
                 if (!App.game.party.alreadyCaughtPokemon(id, shiny)) {
                   sendMessage('catch', {
                     id,
                     shiny
                   });
                 }
-              })
-            }
-          }, 100);
-          
-        };
+              });  
+            };
 
-        ws.onclose = () => {
-          isConnected.current = false;
+            ws.onclose = () => {
+              isConnected.current = false;
 
-          window.Notifier.notify({ 
-            message: `Disconnected from Pokeclicker Super Sync! Gameplay will no longer be synchronized.`,
-          });
+              window.Notifier.notify({ 
+                message: `Disconnected from Pokeclicker Super Sync! Gameplay will no longer be synchronized.`,
+              });
 
-          console.log('Disconnected from sync server.');
-        };
+              console.log('Disconnected from sync server.');
+            };
 
-        ws.onmessage = message => {
-          const data = JSON.parse(message.data);
+            ws.onmessage = message => {
+              const data = JSON.parse(message.data);
 
-          console.log(data);
-          switch (data.event) {
-            case 'alert':
-              window.Notifier.notify(data.payload);
-              break;
+              console.log('[Sync event]', data);
+              switch (data.event) {
+                case 'alert':
+                  window.Notifier.notify(data.payload);
+                  break;
 
-            case 'catch': {
-              const speciesData = PokemonHelper.getPokemonById(data.payload.id);
+                case 'catch': {
+                  const speciesData = PokemonHelper.getPokemonById(data.payload.id);
 
-              if (!App.game.party.alreadyCaughtPokemon(data.payload.id, data.payload.shiny)) {
-                if (data.payload.shiny) {
-                  window.Notifier.notify({
-                    message: `✨ ${data.payload.username} caught a shiny ${speciesData.name}! ✨`,
-                    type: NotificationConstants.NotificationOption.warning,
-                    sound: NotificationConstants.NotificationSound.new_catch,
-                  })
-                } else {
-                  window.Notifier.notify({
-                    message: `${data.payload.username} captured ${GameHelper.anOrA(speciesData.name)} ${speciesData.name}!`,
-                    type: NotificationConstants.NotificationOption.success,
-                    sound: NotificationConstants.NotificationSound.new_catch,
-                  });
+                  if (!App.game.party.alreadyCaughtPokemon(data.payload.id, data.payload.shiny)) {
+                    if (data.payload.shiny) {
+                      window.Notifier.notify({
+                        message: `✨ ${data.payload.username} caught a shiny ${speciesData.name}! ✨`,
+                        type: NotificationConstants.NotificationOption.warning,
+                        sound: NotificationConstants.NotificationSound.new_catch,
+                      })
+                    } else {
+                      window.Notifier.notify({
+                        message: `${data.payload.username} captured ${GameHelper.anOrA(speciesData.name)} ${speciesData.name}!`,
+                        type: NotificationConstants.NotificationOption.success,
+                        sound: NotificationConstants.NotificationSound.new_catch,
+                      });
+                    }
+                    App.game.party.gainPokemonById(data.payload.id, data.payload.shiny, true);
+                  }
+
+                  break;
                 }
-                App.game.party.gainPokemonById(data.payload.id, data.payload.shiny, true);
+
+                case 'initialSync':
+                  data.payload.pokemon.forEach(({ id, shiny }) => {
+                    if (!App.game.party.alreadyCaughtPokemon(id, shiny)) {
+                      App.game.party.gainPokemonById(id, shiny, true);
+                    }
+                  });
+                  
+                  window.Notifier.notify({
+                    message: `Synced ${data.payload.pokemon.length} caught Pokemon from the session.`,
+                    type: NotificationConstants.NotificationOption .success
+                  });
+
+                  break;  
               }
-
-
-              break;
-            }
+            };
           }
-        };
+        }, 100);
       })})()`;
 
       document.body.append(scriptElement);

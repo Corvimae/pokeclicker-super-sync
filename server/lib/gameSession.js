@@ -9,6 +9,8 @@ class GameSession {
 
   addClient(socket, username) {
     this.clients.push({ socket, username });
+
+    this.refreshLastUpdate();
   }
   
   removeClient(ws) {
@@ -17,9 +19,8 @@ class GameSession {
 
   broadcast(event, payload = {}, exclude = null) {
     this.clients.forEach(({ socket }) => {
-      console.log(event, socket === exclude);
       if (socket === exclude) return;
-      console.log('sending', event, payload);
+      
       socket.send(JSON.stringify({ event, payload }));
     });
   }
@@ -33,7 +34,6 @@ class GameSession {
   }
 
   addCatch(ws, id, shiny) {
-    console.log('adding catch???', this.id, this.clients.length);
     const existingRecord = this.pokemon.find(record => record.id === id);
 
     if (existingRecord && shiny) {
@@ -47,6 +47,12 @@ class GameSession {
       id,
       shiny,
     }, ws);
+    
+    this.refreshLastUpdate();
+  }
+  
+  refreshLastUpdate() {
+    this.lastUpdate = new Date();
   }
 }
 

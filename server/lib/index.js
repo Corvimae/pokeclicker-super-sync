@@ -1,11 +1,27 @@
 var express = require('express');
 const { GameSession } = require('./gameSession');
 
+const ROOM_EXPIRY_CHECK_MS = 1000 * 60 * 10; // 10 minutes
+const ROOM_EXPIRY_TIMEOUT_MS = 1000 * 60 * 60 * 8; // 8 hours
+
 var app = express();
 
 require('express-ws')(app);
 
 const rooms = {};
+
+setInterval(() => {
+  console.log(`Checking ${Object.keys(rooms).length} room(s) for inactivity...`);
+  for (let room of Object.values(rooms)) {
+    if (new Date().getTime() - room.lastUpdate.getTime() >= ROOM_EXPIRY_TIMEOUT_MS) {
+      console.log(`Closing room due to inactivity: ${room.id}.`);
+
+      room.clients.forEach(client => client.terminate());
+
+      delete rooms[room.id];
+    }
+  }
+}, ROOM_EXPIRY_CHECK_MS);
 
 app.get('/', (req, res) => {
   res.json('This is Pokeclicker Super Sync.');
@@ -28,14 +44,13 @@ function sendAlert(ws, message, title, options = {}) {
 }
 
 function sendError(ws, message, options = {}) {
-  sendMessage(ws, 'alert', { message, ...options }); // todo styling.
+  sendMessage(ws, 'alert', { message, type: 'danger', ...options }); // todo styling.
 
 }
 
 function usingRoom(ws, callback) {
   const room = Object.values(rooms).find(room => room.clients.find(({ socket }) => socket === ws) !== undefined);
 
-  console.log(room);
   if (room) {
     callback(room)
   } else {
@@ -48,8 +63,6 @@ app.ws('/', ws => {
     try {
       const data = JSON.parse(msg);
 
-      console.log('msg', data);
-
       switch (data.event) {
         case 'join': {
           const room = rooms[data.payload.code];
@@ -60,6 +73,9 @@ app.ws('/', ws => {
             room.addClient(ws, data.payload.username);
 
             sendAlert(ws, `Joined the super sync session (Sync code: ${data.payload.code}).`, 'Session joined')    
+            sendMessage(ws, 'initialSync', Object.entries(room).reduce((acc, [key, value]) => (
+              key === 'clients' ? acc : { ...acc, [key]: value }
+            ), {}))
           } else {
             sendError('Game session does not exist.');
           }
