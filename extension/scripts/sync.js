@@ -1,7 +1,6 @@
 console.log('Pokeclicker Super Sync enabled.');
 
-const SYNC_SERVER_SECURE = false;
-const SYNC_SERVER_URL = 'localhost:3000';
+const DEBUG = false;
 
 (() => {
   const syncCode = { current: '' };
@@ -47,7 +46,7 @@ const SYNC_SERVER_URL = 'localhost:3000';
     requestCodeInput.addEventListener('click', () => {
       syncCodeInput.value = 'Requesting sync code...';
 
-      fetch(`http${SYNC_SERVER_SECURE ? 's' : ''}://${SYNC_SERVER_URL}/session/new`)
+      fetch(`${DEBUG ? 'http://localhost:3000' : 'https://pokeclicker-super-sync.maybreak.com'}/session/new`)
         .then(response => response.json())
         .then(data => {
           syncCode.current = data.id;
@@ -72,8 +71,8 @@ const SYNC_SERVER_URL = 'localhost:3000';
 
       const scriptElement = document.createElement('script');
 
-      scriptElement.textContent = `const SYNC_CODE = '${syncCode.current}'; const PLAYER_NAME = '${playerName.current || 'A player'}'; (${(() => {
-        const ws = new WebSocket(`ws://localhost:3000/`);
+      scriptElement.textContent = `const SUPER_SYNC_DEBUG = ${DEBUG ? 'true' : 'false'}; const SYNC_CODE = '${syncCode.current}'; const PLAYER_NAME = '${playerName.current || 'A player'}'; (${(() => {
+        const ws = new WebSocket(SUPER_SYNC_DEBUG ? `ws://localhost:3000/` : 'wss://pokeclicker-super-sync.maybreak.com/');
         const isConnected = { current: false };
         
         console.log('Session joined!');
