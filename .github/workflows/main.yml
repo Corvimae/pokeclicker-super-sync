@@ -23,7 +23,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
         
       - name: Build container image
-        run: docker build -t docker.io/corvimae/pokeclicker-super-sync-server:latest .
+        run: docker build -t docker.io/corvimae/pokeclicker-super-sync-server:latest ./server
 
       - name: Push image
         run: docker push docker.io/corvimae/pokeclicker-super-sync-server:latest
