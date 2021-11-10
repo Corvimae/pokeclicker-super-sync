@@ -4,3 +4,5 @@ web-ext-artifacts/
 yarn-error.log
 
 .DS_Store
+
+.web-extension-id
