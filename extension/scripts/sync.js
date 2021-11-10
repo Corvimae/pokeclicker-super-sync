@@ -1,6 +1,6 @@
 console.log('Pokeclicker Super Sync enabled.');
 
-const DEBUG = true;
+const DEBUG = false;
 
 (() => {
   const syncCode = { current: '' };
