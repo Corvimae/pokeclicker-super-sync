@@ -1,4 +1,5 @@
 var express = require('express');
+var cors = require('cors');
 const { GameSession } = require('./gameSession');
 
 const ROOM_EXPIRY_CHECK_MS = 1000 * 60 * 10; // 10 minutes
@@ -9,6 +10,8 @@ var app = express();
 require('express-ws')(app);
 
 const rooms = {};
+
+app.use(cors());
 
 setInterval(() => {
   console.log(`Checking ${Object.keys(rooms).length} room(s) for inactivity...`);
