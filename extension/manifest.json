@@ -19,5 +19,10 @@
     "*://localhost/*",
     "*://pokeclicker-super-sync.maybreak.com/*",
     "webRequest"
-  ]
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "pokeclicker-super-sync@maybreak.com"
+    }
+  }
 }

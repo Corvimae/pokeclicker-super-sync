@@ -14,7 +14,7 @@ note: this is intended for co-op speedrunning, and only works with new save file
 
 ## Installation
 
-download the release from over there -->
+download the .xpi file from the latest releases right over there -->
 
 in firefox, go to "Add-ons and themes" in the menu in the top-right.
 
@@ -22,7 +22,7 @@ click the gear.
 
 select "Install Add-on From File..."
 
-select the zip you downloaded from the releases.
+select the .xpi you downloaded from the releases.
 
 theoretically this works on chrome too but i didnt test it.
 
