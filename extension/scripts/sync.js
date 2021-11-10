@@ -64,10 +64,8 @@ const DEBUG = false;
 
     joinSessionButton.textContent = 'Join Session';
 
-    const baseStartGame = joinSessionButton.onclick;
-
     joinSessionButton.onclick = () => {
-      baseStartGame();
+      startButton.click();
 
       const scriptElement = document.createElement('script');
 
@@ -90,6 +88,7 @@ const DEBUG = false;
             console.log('Session joined!');
             
             const ws = { current: null };
+            const heartbeatIntervalId = { current: null };
             const isConnected = { current: false };
             const isAttemptingConnection = { current: false };
             const hasInjected = { current: false };
@@ -108,7 +107,9 @@ const DEBUG = false;
               
               sendMessage('join', { username: PLAYER_NAME });
 
-              console.log('Connected to sync server.');
+              console.log('Connected to sync server.'); 
+
+              heartbeatIntervalId.current = setInterval(() => sendMessage('heartbeat'), 1000);
 
               // Wait for game to finish setting up then hook into gameplay methods.
               function injectMethodBefore(object, method, callback) {
@@ -153,6 +154,11 @@ const DEBUG = false;
               isConnected.current = false;
               isAttemptingConnection.current = false;
 
+              if (heartbeatIntervalId.current !== null) {
+                clearInterval(heartbeatIntervalId.current);
+                heartbeatIntervalId.current = null;
+              }
+
               window.Notifier.notify({ 
                 message: `Disconnected from Pokeclicker Super Sync! Gameplay will no longer be synchronized.`,
               });
@@ -167,6 +173,9 @@ const DEBUG = false;
               switch (data.event) {
                 case 'alert':
                   window.Notifier.notify(data.payload);
+                  break;
+
+                case 'heartbeat-response':
                   break;
 
                 case 'catch': {

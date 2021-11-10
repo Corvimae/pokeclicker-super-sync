@@ -66,6 +66,10 @@ app.ws('/', ws => {
       const data = JSON.parse(msg);
 
       switch (data.event) {
+        case 'heartbeat':
+          sendMessage(ws, 'heartbeat-response');
+          break;
+
         case 'join': {
           const room = rooms[data.payload.code];
 
