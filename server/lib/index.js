@@ -39,7 +39,7 @@ app.get('/session/new', (req, res) => {
 });
 
 function sendMessage(ws, event, payload = {}) {
-  ws?.send(JSON.stringify({ event, payload }));
+  ws?.send?.(JSON.stringify({ event, payload }));
 }
 
 function sendAlert(ws, message, title, options = {}) {
@@ -48,7 +48,6 @@ function sendAlert(ws, message, title, options = {}) {
 
 function sendError(ws, message, options = {}) {
   sendMessage(ws, 'alert', { message, type: 'danger', ...options }); // todo styling.
-
 }
 
 function usingRoom(ws, callback) {
@@ -75,7 +74,10 @@ app.ws('/', ws => {
 
             room.addClient(ws, data.payload.username);
 
-            sendAlert(ws, `Joined the super sync session (Sync code: ${data.payload.code}).`, 'Session joined')    
+            const otherMembers = room.getSessionMembers(ws) ;
+            const otherMembersMessage = otherMembers.length > 0 ? `There are ${otherMembers.length} other player(s) in this room: ${otherMembers.join(', ')}.` : 'You are the only player in this room.';
+
+            sendAlert(ws, `Joined the super sync session (Sync code: ${data.payload.code}).\n\n${otherMembersMessage}`, 'Session joined')    
             sendMessage(ws, 'initialSync', Object.entries(room).reduce((acc, [key, value]) => (
               key === 'clients' ? acc : { ...acc, [key]: value }
             ), {}))

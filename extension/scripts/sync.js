@@ -1,6 +1,6 @@
 console.log('Pokeclicker Super Sync enabled.');
 
-const DEBUG = false;
+const DEBUG = true;
 
 (() => {
   const syncCode = { current: '' };
@@ -87,17 +87,20 @@ const DEBUG = false;
             console.log('Super sync hooks injected.');
             clearInterval(waitInterval.current);
 
-            const ws = new WebSocket(SUPER_SYNC_DEBUG ? `ws://localhost:3000/` : 'wss://pokeclicker-super-sync.maybreak.com/');
-            const isConnected = { current: false };
-            
             console.log('Session joined!');
+            
+            const ws = { current: null };
+            const isConnected = { current: false };
+            const isAttemptingConnection = { current: false };
+            const hasInjected = { current: false };
 
             function sendMessage(event, payload = {}) {
-              if (isConnected) ws.send(JSON.stringify({ event, payload: { code: SYNC_CODE, ...payload } }));
+              if (isConnected.current) ws.current.send(JSON.stringify({ event, payload: { code: SYNC_CODE, ...payload } }));
             }
 
-            ws.onopen = () => {
+            function handleSocketOpen() {
               isConnected.current = true;
+              isAttemptingConnection.current = false;
 
               window.Notifier.notify({
                 message: `Connected to Pokeclicker Super Sync server, attempting to join session...`,
@@ -126,36 +129,40 @@ const DEBUG = false;
                 };
               }
 
-              injectMethodBefore(App.game.party, 'gainPokemonById', (id, shiny) => {
-                if (!App.game.party.alreadyCaughtPokemon(id, shiny)) {
-                  sendMessage('catch', {
-                    id,
-                    shiny
-                  });
-                }
-              });  
+              if (!hasInjected.current) {
+                hasInjected.current = true;
 
-              injectMethodBefore(App.game.badgeCase, 'gainBadge', badge => {
-                console.log(badge);
-                if (!App.game.badgeCase.hasBadge(badge)) {
-                  sendMessage('badge', { badge });
-                }
-              });  
-            };
+                injectMethodBefore(App.game.party, 'gainPokemonById', (id, shiny) => {
+                  if (!App.game.party.alreadyCaughtPokemon(id, shiny)) {
+                    sendMessage('catch', {
+                      id,
+                      shiny
+                    });
+                  }
+                });  
 
-            ws.onclose = () => {
+                injectMethodBefore(App.game.badgeCase, 'gainBadge', badge => {
+                  if (!App.game.badgeCase.hasBadge(badge)) {
+                    sendMessage('badge', { badge });
+                  }
+                });
+              }
+            }
+
+            function handleSocketClose() {
               isConnected.current = false;
+              isAttemptingConnection.current = false;
 
               window.Notifier.notify({ 
                 message: `Disconnected from Pokeclicker Super Sync! Gameplay will no longer be synchronized.`,
               });
 
               console.log('Disconnected from sync server.');
-            };
-
-            ws.onmessage = message => {
+            }
+            
+            function handleSocketMessage(message) {
               const data = JSON.parse(message.data);
-
+  
               console.log('[Sync event]', data);
               switch (data.event) {
                 case 'alert':
@@ -219,7 +226,27 @@ const DEBUG = false;
 
                   break;  
               }
-            };
+            }
+
+            function reconnect() {
+              ws.current = new WebSocket(SUPER_SYNC_DEBUG ? `ws://localhost:3000/` : 'wss://pokeclicker-super-sync.maybreak.com/');
+              isAttemptingConnection.current = true;
+
+              ws.current.onopen = handleSocketOpen;
+              ws.current.onclose = handleSocketClose;
+              ws.current.onmessage = handleSocketMessage;
+            }
+            
+            setInterval(() => {
+              if(!isConnected.current && !isAttemptingConnection.current) {
+                reconnect();
+                window.Notifier.notify({
+                  message: 'Attempting to rejoin session...',
+                });
+              }
+            }, 1000);
+
+            reconnect();
           }
         }, 100);
       })})()`;

@@ -33,6 +33,10 @@ class GameSession {
   getUsername(ws) {
     return this.clients.find(({ socket }) => socket === ws)?.username ?? null;
   }
+  
+  getSessionMembers(exclude) {
+    return this.clients.filter(({ socket }) => socket !== exclude).map(client => client.username);
+  }
 
   addCatch(ws, id, shiny) {
     const existingRecord = this.pokemon.find(record => record.id === id);
