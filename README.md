@@ -14,6 +14,10 @@ note: this is intended for co-op speedrunning, and only works with new save file
 
 ## Installation
 
+add it here: https://addons.mozilla.org/en-US/firefox/addon/pokeclicker-super-sync/
+
+### Manual
+
 download the .xpi file from the latest releases right over there -->
 
 in firefox, go to "Add-ons and themes" in the menu in the top-right.
