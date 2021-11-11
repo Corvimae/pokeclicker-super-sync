@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Pokeclicker Super Sync!",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Sync Pokeclicker progress between multiple players.",
   "icons": {
     "48": "icons/icon-48.png",

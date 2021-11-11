@@ -264,10 +264,18 @@ const DEBUG = false;
       
       const codeDisplayElement = document.createElement('div');
 
-      codeDisplayElement.innerHTML = `Sync code: ${syncCode.current}`;
+      codeDisplayElement.textContent = `Sync code: ${syncCode.current}`;
       codeDisplayElement.classList.add('code-display');
 
+      const versionDisplayElement = document.createElement('div');
+
+      versionDisplayElement.textContent = `Pokéclicker Super Sync v${browser.runtime.getManifest().version}`;
+      versionDisplayElement.classList.add('version-display');
+
+      codeDisplayElement.appendChild(versionDisplayElement);
+      
       document.body.appendChild(codeDisplayElement);
+
     };
 
     wrapper.appendChild(joinSessionButton);

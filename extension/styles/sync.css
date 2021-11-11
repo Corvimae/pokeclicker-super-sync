@@ -6,3 +6,7 @@
   text-align: right;
   color: rgba(255, 255, 255, 0.7);
 }
+
+.version-display {
+  font-size: 1rem;
+}
