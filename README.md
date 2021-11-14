@@ -14,11 +14,7 @@ note: this is intended for co-op speedrunning, and only works with new save file
 
 ## Installation
 
-add it here: https://addons.mozilla.org/en-US/firefox/addon/pokeclicker-super-sync/
-
-### Manual
-
-download the .xpi file from the latest releases right over there -->
+download the .zip file from the latest releases right over there -->
 
 in firefox, go to "Add-ons and themes" in the menu in the top-right.
 
@@ -29,6 +25,8 @@ select "Install Add-on From File..."
 select the .xpi you downloaded from the releases.
 
 theoretically this works on chrome too but i didnt test it.
+
+you may need to disable application signing, as the plugin got disabled by mozilla and they won't tell me why. https://support.mozilla.org/en-US/kb/add-on-signing-in-firefox
 
 ## Usage
 
