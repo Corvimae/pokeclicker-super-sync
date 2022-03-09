@@ -99,6 +99,13 @@ app.ws('/', ws => {
 
           break;
 
+        case 'keyItem':
+          usingRoom(ws, room => {
+            room.addKeyItem(ws, data.payload.keyItem);
+          });
+
+          break;
+
         case 'badge':
           usingRoom(ws, room => {
             room.addBadge(ws, data.payload.badge);

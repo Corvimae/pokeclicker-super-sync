@@ -147,6 +147,12 @@ const DEBUG = false;
                     sendMessage('badge', { badge });
                   }
                 });
+
+                injectMethodBefore(App.game.keyItems, 'gainKeyItem', keyItem => {
+                  if (!App.game.keyItems.hasKeyItem(keyItem)) {
+                    sendMessage('keyItem', { keyItem });
+                  }
+                });
               }
             }
 
@@ -209,7 +215,19 @@ const DEBUG = false;
                       message: `${data.payload.username} obtained the ${BadgeEnums[data.payload.badge]} Badge!`,
                       type: NotificationConstants.NotificationOption.success
                     });
-  
+                  }
+                  break;
+
+                case 'keyItem':
+                  if (!App.game.keyItems.hasKeyItem(data.payload.keyItem)) {
+                    App.game.keyItems.gainKeyItem(data.payload.keyItem);
+
+                    const itemName = GameConstants.humanifyString(KeyItems.KeyItem[data.payload.keyItem]);
+                    
+                    window.Notifier.notify({
+                      message: `${data.payload.username} obtained the ${itemName}!`,
+                      type: NotificationConstants.NotificationOption.success
+                    });
                   }
                   break;
 
@@ -225,9 +243,15 @@ const DEBUG = false;
                       App.game.badgeCase.gainBadge(badge)
                     }
                   });
+
+                  data.payload.keyItems.forEach(keyItem => {
+                    if (!App.game.keyItems.hasKeyItem(keyItem)) {
+                      App.game.keyItems.gainKeyItem(keyItem)
+                    }
+                  });
                   
                   window.Notifier.notify({
-                    message: `- ${data.payload.pokemon.length} caught Pokemon\n - ${data.payload.badges.length} badges`,
+                    message: `- ${data.payload.pokemon.length} caught Pokemon\n - ${data.payload.badges.length} badges\n - ${data.payload.keyItems.length} key items`,
                     title: 'Synced:',
                     type: NotificationConstants.NotificationOption.success,
                     timeout: 15000

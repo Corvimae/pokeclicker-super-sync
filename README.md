@@ -9,6 +9,7 @@ unless?
 currently syncs:
 - caught pokemon (including shinies)
 - badges
+- held items
 
 note: this is intended for co-op speedrunning, and only works with new save files. 
 

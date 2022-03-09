@@ -5,6 +5,7 @@ class GameSession {
     this.clients = [];
     this.pokemon = [];
     this.badges = [];
+    this.keyItems = [];
     this.lastUpdate = new Date();
   }
 
@@ -63,6 +64,19 @@ class GameSession {
       this.broadcast('badge', { 
         username: this.getUsername(ws),
         badge
+      }, ws);
+    }
+
+    this.refreshLastUpdate();
+  }
+  
+  addKeyItem(ws, keyItem) {
+    if (this.keyItems.indexOf(keyItem) === -1) {
+      this.keyItems.push(keyItem);
+
+      this.broadcast('keyItem', { 
+        username: this.getUsername(ws),
+        keyItem
       }, ws);
     }
 
