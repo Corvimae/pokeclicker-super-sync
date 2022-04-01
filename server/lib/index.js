@@ -14,10 +14,10 @@ const rooms = {};
 app.use(cors());
 
 setInterval(() => {
-  console.log(`Checking ${Object.keys(rooms).length} room(s) for inactivity...`);
+  console.info(`Checking ${Object.keys(rooms).length} room(s) for inactivity...`);
   for (let room of Object.values(rooms)) {
     if (new Date().getTime() - room.lastUpdate.getTime() >= ROOM_EXPIRY_TIMEOUT_MS) {
-      console.log(`Closing room due to inactivity: ${room.id}.`);
+      console.info(`Closing room due to inactivity: ${room.id}.`);
 
       room.clients.forEach(client => client.terminate());
 
@@ -120,7 +120,7 @@ app.ws('/', ws => {
 
           break;
         default:
-          console.log(`Unexpected event type on socket: ${data.event}.`);
+          console.warn(`Unexpected event type on socket: ${data.event}.`);
       }
     } catch (e) {
       console.error(e);

@@ -7,6 +7,7 @@ class GameSession {
     this.badges = [];
     this.keyItems = [];
     this.wallet = { currencies: [] };
+    this.statistics = {};
     this.lastUpdate = new Date();
   }
 
@@ -73,12 +74,52 @@ class GameSession {
   
   addSaveData(ws, data) {
     const username = this.getUsername(ws);
+
+    // Handle wallet data
     const wallet = data.wallet;
     this.wallet.currencies = wallet.currencies.map((v, i) => (this.wallet.currencies[i] || 0) + v);
+
+    // Handle statistics data
+    Object.entries(data.statistics).forEach(([key, value]) => {
+      if (typeof value == 'number') {
+        if (!this.statistics[key]) this.statistics[key] = 0;
+        this.statistics[key] += value;
+        return;
+      }
+      // Array
+      if (value.constructor.name == 'Array') {
+        if (!this.statistics[key]) this.statistics[key] = [];
+        value.forEach((v, k) => {
+          if (!this.statistics[key][k]) this.statistics[key][k] = 0;
+          this.statistics[key][k] += v;
+        })
+        return;
+      }
+      // Object
+      if (value.constructor.name == 'Object') {
+        if (!this.statistics[key]) this.statistics[key] = {};
+        if (key == 'routeKills') {
+          Object.entries(value).forEach(([r, region]) => {
+            if (!this.statistics[key][r]) this.statistics[key][r] = {};
+            Object.entries(region).forEach(([k, v]) => {
+              if (!this.statistics[key][r][k]) this.statistics[key][r][k] = 0;
+              this.statistics[key][r][k] += v;
+            });
+          });
+          return;
+        }
+        Object.entries(value).forEach(([k, v]) => {
+          if (!this.statistics[key][k]) this.statistics[key][k] = 0;
+          this.statistics[key][k] += v;
+        });
+        return;
+      }
+    });
 
     this.broadcast('saveTick', { 
       username,
       wallet: wallet,
+      statistics: data.statistics,
     }, ws);
 
     this.refreshLastUpdate();

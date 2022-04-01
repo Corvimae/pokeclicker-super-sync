@@ -6,6 +6,7 @@ const DEBUG = false;
   const syncCode = { current: '' };
   const playerName = { current: '' };
   const _wallet = {};
+  const _statistics = {};
 
   if (!document.querySelector('.sync-code-input')) {
     const wrapper = document.createElement('div');
@@ -95,6 +96,7 @@ const DEBUG = false;
             const hasInjected = { current: false };
             // Update our wallet object now that the game has loaded
             _wallet = App.game.wallet.toJSON();
+            _statistics = App.game.statistics.toJSON();
 
             function sendMessage(event, payload = {}) {
               if (isConnected.current) ws.current.send(JSON.stringify({ event, payload: { code: SYNC_CODE, ...payload } }));
@@ -158,11 +160,63 @@ const DEBUG = false;
                 });
 
                 injectMethodBefore(Save, 'store', player => {
-                  let wallet = App.game.wallet.toJSON();
                   // only send the difference
+
+                  // Handle wallet
+                  let wallet = App.game.wallet.toJSON();
                   wallet.currencies = wallet.currencies.map((v,i) => v - (_wallet.currencies[i] || 0))
-                  sendMessage('saveTick', { wallet });
                   _wallet = App.game.wallet.toJSON();
+
+                  // Handle statistics
+                  const statistics = {};
+                  const tempStatistics = App.game.statistics.toJSON();
+                  Object.entries(tempStatistics).forEach(([key, value]) => {
+                    if (typeof value == 'number') {
+                      const val = value - _statistics[key];
+                      // We don't want to bother sending values that haven't changed
+                      if (!val) return;
+                      statistics[key] = val;
+                      return;
+                    }
+                    // Array
+                    if (value.constructor.name == 'Array') {
+                      value = value.map((v, i) => v - (_statistics[key][i] || 0));
+                      // We don't want to bother sending values that haven't changed
+                      const found = value.find(v => v != 0)
+                      if (found) {
+                        statistics[key] = value;
+                      }
+                      return;
+                    }
+                    // Object
+                    if (value.constructor.name == 'Object') {
+                      if (key == 'routeKills') {
+                        Object.entries(value).forEach(([r, region]) => {
+                          Object.entries(region).forEach(([k, v]) => {
+                            const val = v - (_statistics[key][r][k] || 0)
+                            // We don't want to bother sending values that haven't changed
+                            if (!val) return;
+                            if (!statistics[key]) statistics[key] = {};
+                            if (!statistics[key][r]) statistics[key][r] = {};
+                            statistics[key][r][k] = val;
+                          });
+                        });
+                        return;
+                      }
+                      Object.entries(value).forEach(([k, v]) => {
+                        const val = v - (_statistics[key]?.[k] || 0)
+                        // We don't want to bother sending values that haven't changed
+                        if (val) {
+                          if (!statistics[key]) statistics[key] = {};
+                          statistics[key][k] = val;
+                        }
+                      });
+                      return;
+                    }
+                  });
+                  _statistics = tempStatistics;
+
+                  sendMessage('saveTick', { wallet, statistics: statistics });
                 });
               }
             }
@@ -180,13 +234,13 @@ const DEBUG = false;
                 message: `Disconnected from Pokeclicker Super Sync! Gameplay will no longer be synchronized.`,
               });
 
-              console.log('Disconnected from sync server.');
+              console.warn('Disconnected from sync server.');
             }
             
             function handleSocketMessage(message) {
               const data = JSON.parse(message.data);
   
-              console.log('[Sync event]', data);
+              console.debug('[Sync event]', data);
               switch (data.event) {
                 case 'alert':
                   window.Notifier.notify(data.payload);
@@ -243,14 +297,56 @@ const DEBUG = false;
                   break;
 
                 case 'saveTick':
-                  // Apply the difference
+                  // Apply the differences
+
+                  // Handle our wallet
                   data.payload.wallet.currencies.forEach((v, i) => {
                     if (v === 0) return;
-                    const amount = new Amount(Math.abs(v), i);
                     _wallet.currencies[i] += v;
-                    if (v > 0) App.game.wallet.addAmount(amount);
-                    if (v < 0) GameHelper.incrementObservable(App.game.wallet.currencies[i], v);
-                  })
+                    GameHelper.incrementObservable(App.game.wallet.currencies[i], v);
+                  });
+
+                  // Handle our statistics
+                  Object.entries(data.payload.statistics).forEach(([key, value]) => {
+                    if (typeof value == 'number') {
+                      GameHelper.incrementObservable(App.game.statistics[key], value);
+                      _statistics[key] += value;
+                      return;
+                    }
+                    // Array
+                    if (value.constructor.name == 'Array') {
+                      value.forEach((v, k) => {
+                        if (!v) return;
+                        GameHelper.incrementObservable(App.game.statistics[key][k], v);
+                        if (!_statistics[key][k]) _statistics[key][k] = 0;
+                        _statistics[key][k] += value;
+                      })
+                      return;
+                    }
+                    // Object
+                    if (value.constructor.name == 'Object') {
+                      if (key == 'routeKills') {
+                        Object.entries(value).forEach(([r, region]) => {
+                          if (!_statistics[key][r]) _statistics[key][r] = {};
+                          Object.entries(region).forEach(([k, v]) => {
+                            if (!v) return;
+                            GameHelper.incrementObservable(App.game.statistics[key][r][k], v);
+                            if (!_statistics[key][r][k]) _statistics[key][r][k] = 0;
+                            _statistics[key][r][k] += v;
+                          });
+                        });
+                        return;
+                      }
+                      Object.entries(value).forEach(([k, v]) => {
+                        if (!v) return;
+                        GameHelper.incrementObservable(App.game.statistics[key][k], v);
+                        if (!_statistics[key][k]) _statistics[key][k] = 0;
+                        _statistics[key][k] += v;
+                      });
+                      return;
+                    }
+                  });
+
                   break;
 
                 case 'initialSync':
@@ -274,10 +370,59 @@ const DEBUG = false;
 
                   data.payload.wallet.currencies.forEach((v, i) => {
                     if (v === 0) return;
-                    const amount = new Amount(Math.abs(v), i);
                     _wallet.currencies[i] += v;
-                    if (v > 0) App.game.wallet.addAmount(amount);
-                    if (v < 0) GameHelper.incrementObservable(App.game.wallet.currencies[i], v);
+                    GameHelper.incrementObservable(App.game.wallet.currencies[i], v);
+                  });
+
+                  // Handle our wallet
+                  data.payload.wallet.currencies.forEach((v, i) => {
+                    if (v === 0) return;
+                    _wallet.currencies[i] += v;
+                    GameHelper.incrementObservable(App.game.wallet.currencies[i], v);
+                  });
+
+                  // Handle our statistics
+                  Object.entries(data.payload.statistics).forEach(([key, value]) => {
+                    if (typeof value == 'number') {
+                      GameHelper.incrementObservable(App.game.statistics[key], value);
+                      if (!_statistics[key]) _statistics[key] = 0;
+                      _statistics[key] += value;
+                      return;
+                    }
+                    // Array
+                    if (value.constructor.name == 'Array') {
+                      if (!_statistics[key]) _statistics[key] = [];
+                      value.forEach((v, k) => {
+                        if (!v) return;
+                        GameHelper.incrementObservable(App.game.statistics[key][k], v);
+                        if (!_statistics[key][k]) _statistics[key][k] = 0;
+                        _statistics[key][k] += value;
+                      })
+                      return;
+                    }
+                    // Object
+                    if (value.constructor.name == 'Object') {
+                      if (!_statistics[key]) _statistics[key] = {};
+                      if (key == 'routeKills') {
+                        Object.entries(value).forEach(([r, region]) => {
+                          if (!_statistics[key][r]) _statistics[key][r] = {};
+                          Object.entries(region).forEach(([k, v]) => {
+                            if (!v) return;
+                            GameHelper.incrementObservable(App.game.statistics[key][r][k], v);
+                            if (!_statistics[key][r][k]) _statistics[key][r][k] = 0;
+                            _statistics[key][r][k] += v;
+                          });
+                        });
+                        return;
+                      }
+                      Object.entries(value).forEach(([k, v]) => {
+                        if (!v) return;
+                        GameHelper.incrementObservable(App.game.statistics[key][k], v);
+                        if (!_statistics[key][k]) _statistics[key][k] = 0;
+                        _statistics[key][k] += v;
+                      });
+                      return;
+                    }
                   });
                   
                   window.Notifier.notify({
