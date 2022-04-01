@@ -112,6 +112,13 @@ app.ws('/', ws => {
           });
 
           break;
+
+        case 'saveTick':
+          usingRoom(ws, room => {
+            room.addSaveData(ws, data.payload);
+          });
+
+          break;
         default:
           console.log(`Unexpected event type on socket: ${data.event}.`);
       }

@@ -5,6 +5,7 @@ const DEBUG = false;
 (() => {
   const syncCode = { current: '' };
   const playerName = { current: '' };
+  const _wallet = {};
 
   if (!document.querySelector('.sync-code-input')) {
     const wrapper = document.createElement('div');
@@ -92,6 +93,8 @@ const DEBUG = false;
             const isConnected = { current: false };
             const isAttemptingConnection = { current: false };
             const hasInjected = { current: false };
+            // Update our wallet object now that the game has loaded
+            _wallet = App.game.wallet.toJSON();
 
             function sendMessage(event, payload = {}) {
               if (isConnected.current) ws.current.send(JSON.stringify({ event, payload: { code: SYNC_CODE, ...payload } }));
@@ -152,6 +155,14 @@ const DEBUG = false;
                   if (!App.game.keyItems.hasKeyItem(keyItem)) {
                     sendMessage('keyItem', { keyItem });
                   }
+                });
+
+                injectMethodBefore(Save, 'store', player => {
+                  let wallet = App.game.wallet.toJSON();
+                  // only send the difference
+                  wallet.currencies = wallet.currencies.map((v,i) => v - (_wallet.currencies[i] || 0))
+                  sendMessage('saveTick', { wallet });
+                  _wallet = App.game.wallet.toJSON();
                 });
               }
             }
@@ -229,6 +240,17 @@ const DEBUG = false;
                       type: NotificationConstants.NotificationOption.success
                     });
                   }
+                  break;
+
+                case 'saveTick':
+                  // Apply the difference
+                  data.payload.wallet.currencies.forEach((v, i) => {
+                    if (v === 0) return;
+                    const amount = new Amount(Math.abs(v), i);
+                    _wallet.currencies[i] += v;
+                    if (v > 0) App.game.wallet.addAmount(amount);
+                    if (v < 0) GameHelper.incrementObservable(App.game.wallet.currencies[0], v);
+                  })
                   break;
 
                 case 'initialSync':

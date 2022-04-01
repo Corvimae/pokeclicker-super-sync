@@ -70,6 +70,18 @@ class GameSession {
     this.refreshLastUpdate();
   }
   
+  addSaveData(ws, data) {
+    const username = this.getUsername(ws);
+    const wallet = data.wallet;
+
+    this.broadcast('saveTick', { 
+      username,
+      wallet: wallet,
+    }, ws);
+
+    this.refreshLastUpdate();
+  }
+  
   addKeyItem(ws, keyItem) {
     if (this.keyItems.indexOf(keyItem) === -1) {
       this.keyItems.push(keyItem);
