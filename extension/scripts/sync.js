@@ -277,7 +277,7 @@ const DEBUG = false;
                     const amount = new Amount(Math.abs(v), i);
                     _wallet.currencies[i] += v;
                     if (v > 0) App.game.wallet.addAmount(amount);
-                    if (v < 0) GameHelper.incrementObservable(App.game.wallet.currencies[0], v);
+                    if (v < 0) GameHelper.incrementObservable(App.game.wallet.currencies[i], v);
                   });
                   
                   window.Notifier.notify({
