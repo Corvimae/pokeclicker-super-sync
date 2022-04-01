@@ -365,6 +365,10 @@ const DEBUG = false;
                   data.payload.keyItems.forEach(keyItem => {
                     if (!App.game.keyItems.hasKeyItem(keyItem)) {
                       App.game.keyItems.gainKeyItem(keyItem)
+                      if (keyItem == KeyItems.KeyItem.Dungeon_ticket) {
+                        // We need to set a player starter, otherwise the player won't be able to continue, they can still select a starter though
+                        player.starter(0);
+                      }
                     }
                   });
 
