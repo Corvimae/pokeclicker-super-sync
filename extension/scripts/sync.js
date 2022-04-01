@@ -271,6 +271,14 @@ const DEBUG = false;
                       App.game.keyItems.gainKeyItem(keyItem)
                     }
                   });
+
+                  data.payload.wallet.currencies.forEach((v, i) => {
+                    if (v === 0) return;
+                    const amount = new Amount(Math.abs(v), i);
+                    _wallet.currencies[i] += v;
+                    if (v > 0) App.game.wallet.addAmount(amount);
+                    if (v < 0) GameHelper.incrementObservable(App.game.wallet.currencies[0], v);
+                  });
                   
                   window.Notifier.notify({
                     message: `- ${data.payload.pokemon.length} caught Pokemon\n - ${data.payload.badges.length} badges\n - ${data.payload.keyItems.length} key items`,

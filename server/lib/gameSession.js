@@ -6,6 +6,7 @@ class GameSession {
     this.pokemon = [];
     this.badges = [];
     this.keyItems = [];
+    this.wallet = { currencies: [] };
     this.lastUpdate = new Date();
   }
 
@@ -73,6 +74,7 @@ class GameSession {
   addSaveData(ws, data) {
     const username = this.getUsername(ws);
     const wallet = data.wallet;
+    this.wallet.currencies = wallet.currencies.map((v, i) => (this.wallet.currencies[i] || 0) + v);
 
     this.broadcast('saveTick', { 
       username,
