@@ -9,17 +9,16 @@ const DEBUG = false;
   if (!document.querySelector('.sync-code-input')) {
     const wrapper = document.createElement('div');
 
-    wrapper.classList.add('col-12', 'justify-content-center', 'align-items-center', 'd-flex');
+    wrapper.classList.add('col-md-4', 'col-xs-12', 'justify-content-center', 'align-items-center');
 
     const startButton = [...document.querySelectorAll('.btn.btn-success')].find(x => x.textContent == 'New Save');
-    const joinSessionButton = startButton.cloneNode();
-
-    joinSessionButton.classList.add('disabled');
+    const joinSessionButton = document.createElement('a');
+    joinSessionButton.classList.add('btn', 'btn-success', 'col-12', 'disabled');
     
     const syncCodeInput = document.createElement('input');
 
     syncCodeInput.setAttribute('placeholder', 'Online Sync Code');
-    syncCodeInput.classList.add('sync-code-input');
+    syncCodeInput.classList.add('sync-code-input', 'outline-dark', 'form-control', 'col-12');
 
     syncCodeInput.addEventListener('keyup', event => {
       syncCode.current = event.target.value;
@@ -34,14 +33,15 @@ const DEBUG = false;
     const playerNameInput = document.createElement('input');
 
     playerNameInput.setAttribute('placeholder', 'Username');
+    playerNameInput.classList.add('outline-dark', 'form-control', 'col-12');
 
     playerNameInput.addEventListener('keyup', event => {
       playerName.current = event.target.value;
     });
 
-    const requestCodeInput = document.createElement('label');
+    const requestCodeInput = document.createElement('a');
     
-    requestCodeInput.classList.add('btn', 'btn-success', 'col-md-4', 'col-xs-12', 'mx-1');
+    requestCodeInput.classList.add('btn', 'btn-success', 'col-12', 'mb-0');
 
     requestCodeInput.addEventListener('click', () => {
       syncCodeInput.value = 'Requesting sync code...';
@@ -51,16 +51,13 @@ const DEBUG = false;
         .then(data => {
           syncCode.current = data.id;
           syncCodeInput.value = data.id;
-
+          syncCodeInput.setAttribute('readonly', true);
+          requestCodeInput.remove();
           joinSessionButton.classList.remove('disabled');
         });
     });
 
-    requestCodeInput.textContent = 'Create new session'
-
-    wrapper.appendChild(syncCodeInput);
-    wrapper.appendChild(playerNameInput);
-    wrapper.appendChild(requestCodeInput);
+    requestCodeInput.textContent = 'New Session'
 
     joinSessionButton.textContent = 'Join Session';
 
@@ -302,6 +299,9 @@ const DEBUG = false;
 
     };
 
+    wrapper.appendChild(playerNameInput);
+    wrapper.appendChild(syncCodeInput);
+    wrapper.appendChild(requestCodeInput);
     wrapper.appendChild(joinSessionButton);
 
     document.querySelector('#saveSelector > .row').appendChild(wrapper);
