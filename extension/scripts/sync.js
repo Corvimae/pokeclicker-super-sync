@@ -5,7 +5,6 @@ const DEBUG = false;
 (() => {
   const syncCode = { current: '' };
   const playerName = { current: '' };
-  const _wallet = {};
   const _statistics = {};
 
   if (!document.querySelector('.sync-code-input')) {
@@ -94,8 +93,7 @@ const DEBUG = false;
             const isConnected = { current: false };
             const isAttemptingConnection = { current: false };
             const hasInjected = { current: false };
-            // Update our wallet object now that the game has loaded
-            _wallet = App.game.wallet.toJSON();
+            // Update our statistics object now that the game has loaded
             _statistics = App.game.statistics.toJSON();
 
             function sendMessage(event, payload = {}) {
@@ -161,12 +159,6 @@ const DEBUG = false;
 
                 injectMethodBefore(Save, 'store', player => {
                   // only send the difference
-
-                  // Handle wallet
-                  let wallet = App.game.wallet.toJSON();
-                  wallet.currencies = wallet.currencies.map((v,i) => v - (_wallet.currencies[i] || 0))
-                  _wallet = App.game.wallet.toJSON();
-
                   // Handle statistics
                   const statistics = {};
                   const tempStatistics = App.game.statistics.toJSON();
@@ -216,7 +208,7 @@ const DEBUG = false;
                   });
                   _statistics = tempStatistics;
 
-                  sendMessage('saveTick', { wallet, statistics: statistics });
+                  sendMessage('saveTick', { statistics });
                 });
               }
             }
@@ -299,13 +291,6 @@ const DEBUG = false;
                 case 'saveTick':
                   // Apply the differences
 
-                  // Handle our wallet
-                  data.payload.wallet.currencies.forEach((v, i) => {
-                    if (v === 0) return;
-                    _wallet.currencies[i] += v;
-                    GameHelper.incrementObservable(App.game.wallet.currencies[i], v);
-                  });
-
                   // Handle our statistics
                   Object.entries(data.payload.statistics).forEach(([key, value]) => {
                     if (typeof value == 'number') {
@@ -370,19 +355,6 @@ const DEBUG = false;
                         player.starter(0);
                       }
                     }
-                  });
-
-                  data.payload.wallet.currencies.forEach((v, i) => {
-                    if (v === 0) return;
-                    _wallet.currencies[i] += v;
-                    GameHelper.incrementObservable(App.game.wallet.currencies[i], v);
-                  });
-
-                  // Handle our wallet
-                  data.payload.wallet.currencies.forEach((v, i) => {
-                    if (v === 0) return;
-                    _wallet.currencies[i] += v;
-                    GameHelper.incrementObservable(App.game.wallet.currencies[i], v);
                   });
 
                   // Handle our statistics

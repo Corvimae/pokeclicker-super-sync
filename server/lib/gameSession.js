@@ -6,7 +6,6 @@ class GameSession {
     this.pokemon = [];
     this.badges = [];
     this.keyItems = [];
-    this.wallet = { currencies: [] };
     this.statistics = {};
     this.lastUpdate = new Date();
   }
@@ -75,10 +74,6 @@ class GameSession {
   addSaveData(ws, data) {
     const username = this.getUsername(ws);
 
-    // Handle wallet data
-    const wallet = data.wallet;
-    this.wallet.currencies = wallet.currencies.map((v, i) => (this.wallet.currencies[i] || 0) + v);
-
     // Handle statistics data
     Object.entries(data.statistics).forEach(([key, value]) => {
       if (typeof value == 'number') {
@@ -118,7 +113,6 @@ class GameSession {
 
     this.broadcast('saveTick', { 
       username,
-      wallet: wallet,
       statistics: data.statistics,
     }, ws);
 
