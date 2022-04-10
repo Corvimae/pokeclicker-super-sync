@@ -76,13 +76,13 @@ class GameSession {
 
     // Handle statistics data
     Object.entries(data.statistics).forEach(([key, value]) => {
-      if (typeof value == 'number') {
+      if (typeof value === 'number') {
         if (!this.statistics[key]) this.statistics[key] = 0;
         this.statistics[key] += value;
         return;
       }
       // Array
-      if (value.constructor.name == 'Array') {
+      if (value.constructor.name === 'Array') {
         if (!this.statistics[key]) this.statistics[key] = [];
         value.forEach((v, k) => {
           if (!this.statistics[key][k]) this.statistics[key][k] = 0;
@@ -91,9 +91,9 @@ class GameSession {
         return;
       }
       // Object
-      if (value.constructor.name == 'Object') {
+      if (value.constructor.name === 'Object') {
         if (!this.statistics[key]) this.statistics[key] = {};
-        if (key == 'routeKills') {
+        if (key === 'routeKills') {
           Object.entries(value).forEach(([r, region]) => {
             if (!this.statistics[key][r]) this.statistics[key][r] = {};
             Object.entries(region).forEach(([k, v]) => {

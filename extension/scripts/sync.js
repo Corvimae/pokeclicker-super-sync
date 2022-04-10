@@ -293,13 +293,13 @@ const DEBUG = false;
 
                   // Handle our statistics
                   Object.entries(data.payload.statistics).forEach(([key, value]) => {
-                    if (typeof value == 'number') {
+                    if (typeof value === 'number') {
                       GameHelper.incrementObservable(App.game.statistics[key], value);
                       _statistics[key] += value;
                       return;
                     }
                     // Array
-                    if (value.constructor.name == 'Array') {
+                    if (value.constructor.name === 'Array') {
                       value.forEach((v, k) => {
                         if (!v) return;
                         GameHelper.incrementObservable(App.game.statistics[key][k], v);
@@ -309,8 +309,8 @@ const DEBUG = false;
                       return;
                     }
                     // Object
-                    if (value.constructor.name == 'Object') {
-                      if (key == 'routeKills') {
+                    if (value.constructor.name === 'Object') {
+                      if (key === 'routeKills') {
                         Object.entries(value).forEach(([r, region]) => {
                           if (!_statistics[key][r]) _statistics[key][r] = {};
                           Object.entries(region).forEach(([k, v]) => {
@@ -350,7 +350,7 @@ const DEBUG = false;
                   data.payload.keyItems.forEach(keyItem => {
                     if (!App.game.keyItems.hasKeyItem(keyItem)) {
                       App.game.keyItems.gainKeyItem(keyItem)
-                      if (keyItem == KeyItems.KeyItem.Dungeon_ticket) {
+                      if (keyItem === KeyItems.KeyItem.Dungeon_ticket) {
                         // We need to set a player starter, otherwise the player won't be able to continue, they can still select a starter though
                         player.starter(0);
                       }
@@ -359,14 +359,14 @@ const DEBUG = false;
 
                   // Handle our statistics
                   Object.entries(data.payload.statistics).forEach(([key, value]) => {
-                    if (typeof value == 'number') {
+                    if (typeof value === 'number') {
                       GameHelper.incrementObservable(App.game.statistics[key], value);
                       if (!_statistics[key]) _statistics[key] = 0;
                       _statistics[key] += value;
                       return;
                     }
                     // Array
-                    if (value.constructor.name == 'Array') {
+                    if (value.constructor.name === 'Array') {
                       if (!_statistics[key]) _statistics[key] = [];
                       value.forEach((v, k) => {
                         if (!v) return;
@@ -377,9 +377,9 @@ const DEBUG = false;
                       return;
                     }
                     // Object
-                    if (value.constructor.name == 'Object') {
+                    if (value.constructor.name === 'Object') {
                       if (!_statistics[key]) _statistics[key] = {};
-                      if (key == 'routeKills') {
+                      if (key === 'routeKills') {
                         Object.entries(value).forEach(([r, region]) => {
                           if (!_statistics[key][r]) _statistics[key][r] = {};
                           Object.entries(region).forEach(([k, v]) => {
