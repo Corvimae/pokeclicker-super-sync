@@ -171,7 +171,7 @@ const DEBUG = false;
                       return;
                     }
                     // Array
-                    if (value.constructor.name == 'Array') {
+                    if (value.constructor.name === 'Array') {
                       value = value.map((v, i) => v - (_statistics[key][i] || 0));
                       // We don't want to bother sending values that haven't changed
                       const found = value.find(v => v != 0)
@@ -181,7 +181,7 @@ const DEBUG = false;
                       return;
                     }
                     // Object
-                    if (value.constructor.name == 'Object') {
+                    if (value.constructor.name === 'Object') {
                       if (key == 'routeKills') {
                         Object.entries(value).forEach(([r, region]) => {
                           Object.entries(region).forEach(([k, v]) => {
