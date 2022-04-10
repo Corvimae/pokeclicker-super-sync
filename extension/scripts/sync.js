@@ -182,7 +182,7 @@ const DEBUG = false;
                     }
                     // Object
                     if (value.constructor.name === 'Object') {
-                      if (key == 'routeKills') {
+                      if (key === 'routeKills') {
                         Object.entries(value).forEach(([r, region]) => {
                           Object.entries(region).forEach(([k, v]) => {
                             const val = v - (_statistics[key][r][k] || 0)
