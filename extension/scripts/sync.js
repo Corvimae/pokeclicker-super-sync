@@ -163,7 +163,7 @@ const DEBUG = false;
                   const statistics = {};
                   const tempStatistics = App.game.statistics.toJSON();
                   Object.entries(tempStatistics).forEach(([key, value]) => {
-                    if (typeof value == 'number') {
+                    if (typeof value === 'number') {
                       const val = value - _statistics[key];
                       // We don't want to bother sending values that haven't changed
                       if (!val) return;
